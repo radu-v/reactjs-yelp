@@ -25,8 +25,7 @@ const getConfig = require('hjs-webpack');
 var config = getConfig({
 	isDev: isDev,
 	in: join(src, 'app.js'),
-	out: dest,
-	clearBeforeBuild: true
+	out: dest
 })
 
 config.postcss = [].concat([
@@ -63,5 +62,18 @@ const environmentEnv = dotenv.config({
 	silent: true
 });
 const envVariables = Object.assign({}, dotEnvVars, environmentEnv);
+
+const defines = Object.keys(envVariables)
+	.reduce((memo, key) => {
+		const val = JSON.stringify(envVariables[key]);
+		memo[`__${key.toUpperCase()}__`] = val;
+		return memo;
+	}, {
+		__NODE_ENV__: JSON.stringify(NODE_ENV)
+	});
+
+config.plugins = [
+	new webpack.DefinePlugin(defines)
+].concat(config.plugins);
 
 module.exports = config;
